@@ -1,0 +1,107 @@
+---
+title: "MATH22707 Assignment 1"
+subtitle: Turning Tables
+output: pdf_document
+---
+
+## Student Details
+
+* Manuel (Matthew) Gunadi (s3740473)
+
+## Data Source
+
+- Safe Work Australia (19 April 2018) *Number and incidence rate of work-related traumatic injury fatalities by Occupation – 2012-2016*. Retrieved from 
+https://www.safeworkaustralia.gov.au/doc/number-and-incidence-rate-work-related-traumatic-injury-fatalities-occupation-2012-2016
+
+## Code and Visualisation
+
+```{r libraries}
+library(openxlsx)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(reshape2)
+library(RColorBrewer)
+```
+
+```{r preprocessing_total_fatalities}
+injuries <- read_excel("traumatic_injuries.xlsx", range = "A5:K57")
+total_fatalities <- injuries[,1:6]
+colnames(total_fatalities) <- c("Occupation", total_fatalities[1, 2:6])
+total_fatalities <- total_fatalities[-1,]
+
+#Take only last three years statistics and only the occupation groups
+total_subset <- total_fatalities %>% select(Occupation, `2014`, `2015`, `2016`)
+total_groups <- total_subset %>% filter(Occupation %in% c("Machinery Operators and Drivers", "Labourers", "Technicians and Trades Workers", "Managers", "Professionals", "Community and Personal Service Workers", "Sales Workers", "Clerical and Administrative Workers"))
+
+#Convert from wide to long format data
+total_groups <- reshape2::melt(total_groups, id.vars ="Occupation", variable.name = "Year", value.name = "Total fatalities")
+
+```
+
+
+```{r preprocessing_incidence_rate}
+#take last 3 years of incidence statistics
+incidence <- injuries[,c(1, 9:11)]
+colnames(incidence) <- c("Occupation", "2014", "2015", "2016")
+incidence <- incidence[-1,]
+
+#Take only the occupation groups
+incidence <- incidence %>% filter(Occupation %in% c("Machinery Operators and Drivers", "Labourers", "Technicians and Trades Workers", "Managers", "Professionals", "Community and Personal Service Workers", "Sales Workers", "Clerical and Administrative Workers"))
+
+#Convert from wide to long format data
+incidence_groups <- reshape2::melt(incidence, id.vars ="Occupation", variable.name = "Year", value.name = "Incidence rate")
+
+```
+
+```{r merge_statistics}
+
+merged_injuries <- cbind(total_groups, incidence = round(incidence_groups[,3], digits = 2))
+merged_injuries2 <- reshape2::melt(merged_injuries, id.vars = c("Occupation", "Year"), variable.name = "Statistic", value.name = "Value")
+merged_injuries2$Occupation <- as.factor(merged_injuries2$Occupation)
+merged_injuries2$Occupation <- factor(merged_injuries2$Occupation, labels = c("Clerical", "Community worker", "Labourers", "Machinery Operator", "Managers", "Professionals", "Sales", "Technician/trade"))
+merged_injuries2$Statistic <- as.factor(merged_injuries2$Statistic)
+
+```
+
+```{r Visualisation}
+
+Fatalities <- ggplot(data = merged_injuries2, aes(x = Occupation, y = Value), fill = Year) 
+
+Fatalities2 <- Fatalities + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + facet_grid(~Statistic) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Reds"))(3))
+
+
+
+Fatalities2
+```
+
+
+
+
+```{r, fig.width=9, fig.height=6}
+
+Internet_GDP <- read.csv("../data/Internet_Speeds_and_GDP_Per_Capita.csv")
+# divide all GDP values by 1,000 to make the plot easier to read
+Internet_GDP$GDP <- Internet_GDP$GDP/1000
+# Create an object for the plot, start the ggplot by specifiying the dataset and variables
+plot1 <- ggplot(Internet_GDP, aes(x = Connection_Speed, y = GDP))
+# add a line of best fit before plotting the points to ensure it appears below the points on the final plot
+plot1 <- plot1 + geom_smooth(alpha=0.15, method="lm", color="light grey")
+# add a layer for the plot type (point/scatter), colour the points by region
+plot1 <- plot1 + geom_point(aes(colour = Region), size = 2) + theme_minimal(base_size = 16)
+# add title, make main and legend titles bold for better clarity
+plot1 <- plot1 + ggtitle("Internet Speeds vs Gross Domestic Product", subtitle = "by country, 2017") +
+theme(plot.title = element_text(lineheight=.8, face="bold"), legend.title = element_text(lineheight=.8, face="bold"))
+# label x and y axis
+plot1 <- plot1 + xlab("Average Internet Connection Speed (Mbps)") + ylab("GDP per Capita ($1,000 USD)")
+# Add annotations; Australia = country of target audience, Luxembourg & South Korea = outliers
+plot1 <- plot1 + annotate("text", x = 11, y = 53, label = "Australia", size = 5) +
+  annotate("text", x = 12, y = 100, label = "Luxembourg", size = 5) + annotate("text", x = 27, y= 27, label = "South Korea", size = 5)
+plot1
+```
+
+
+
+
+
+
