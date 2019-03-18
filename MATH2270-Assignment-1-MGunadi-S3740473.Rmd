@@ -16,6 +16,7 @@ https://www.safeworkaustralia.gov.au/doc/number-and-incidence-rate-work-related-
 ## Code and Visualisation
 
 ```{r libraries}
+library(readxl)
 library(openxlsx)
 library(tidyr)
 library(dplyr)
@@ -68,13 +69,11 @@ merged_injuries2$Statistic <- as.factor(merged_injuries2$Statistic)
 
 Fatalities <- ggplot(data = merged_injuries2, aes(x = Occupation, y = Value), fill = Year) 
 
-Fatalities2 <- Fatalities + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + facet_grid(~Statistic) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Reds"))(3))
-
-
+Fatalities2 <- Fatalities + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + facet_grid(Statistic ~ .,) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Reds"))(3))
 
 Fatalities3 <- Fatalities2 + scale_y_continuous(breaks=1:7*10)
 
-Fatalities4 <- Fatalities3 + labs(title = "What occupation experienced the most injury-related Fatalities in Australia?: A study over 3 years", x = "Occupation", y = "Values")
+Fatalities4 <- Fatalities3 + labs(title = "What occupation experienced the most injury-related Fatalities in Australia?", x = "Occupation", y = "Values") + annotate("text", x = 4, y = 20, label = "Highest fatalities")
 
 
 Fatalities4
