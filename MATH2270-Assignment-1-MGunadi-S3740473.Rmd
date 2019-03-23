@@ -15,7 +15,7 @@ https://www.safeworkaustralia.gov.au/doc/number-and-incidence-rate-work-related-
 
 ## Code and Visualisation
 
-```{r libraries}
+```{r libraries, message= FALSE, warning=FALSE}
 library(readxl)
 library(openxlsx)
 library(tidyr)
@@ -25,7 +25,9 @@ library(reshape2)
 library(RColorBrewer)
 library(cowplot)
 library(gridExtra)
+library(formatR)
 library(knitr)
+opts_chunk$set(tidy.opts=list(width.cutoff=40),tidy=TRUE)
 ```
 
 ```{r preprocessing_total_fatalities}
@@ -99,7 +101,8 @@ Incidence4 <- Incidence3 + labs(title = "Incidence rate of Fatalities across Occ
 ```{r Cowplot, fig.height = 12, fig.width= 10, fig.align = "center"}
 
 title_theme <- ggdraw() +
-  draw_label("What occupation experienced the highest injury-related fatalities in Australia (2014-2016)?",
+  draw_label("What occupation experienced the highest injury-related
+             fatalities in Australia (2014-2016)?",
              fontface = "bold", size = 16)
 
 p <- plot_grid(Fatalities4,
