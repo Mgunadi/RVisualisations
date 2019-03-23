@@ -23,6 +23,7 @@ library(dplyr)
 library(ggplot2)
 library(reshape2)
 library(RColorBrewer)
+library(cowplot)
 ```
 
 ```{r preprocessing_total_fatalities}
