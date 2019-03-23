@@ -30,6 +30,8 @@ opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 ```
 
 ```{r preprocessing_total_fatalities}
+#load table
+
 injuries <- read_excel("traumatic_injuries.xlsx", range = "A5:K57")
 total_fatalities <- injuries[,1:6]
 colnames(total_fatalities) <- c("Occupation", total_fatalities[1, 2:6])
@@ -47,6 +49,7 @@ total_groups <- reshape2::melt(total_groups, id.vars ="Occupation", variable.nam
 
 ```{r preprocessing_incidence_rate}
 #take last 3 years of incidence statistics
+
 incidence <- injuries[,c(1, 9:11)]
 colnames(incidence) <- c("Occupation", "2014", "2015", "2016")
 incidence <- incidence[-1,]
@@ -71,6 +74,7 @@ merged_injuries$Occupation <- factor(merged_injuries$Occupation, labels = c("Cle
 
 ```{r visualisation1}
 #Section 1: fatalities
+
 Fatalities <- ggplot(data = merged_injuries, aes(x = Occupation, y = `Total fatalities`), fill = Year) 
 
 Fatalities2 <- Fatalities + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Reds"))(3))
@@ -85,6 +89,7 @@ Fatalities4 <- Fatalities3 + labs(title = "Total Fatalities across Occupations",
 
 ```{r}
 #Section 2: incidence
+
 Incidence <- ggplot(data = merged_injuries, aes(x = Occupation, y = incidence), fill = Year) 
 
 Incidence2 <- Incidence + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Blues"))(3))
@@ -97,6 +102,7 @@ Incidence4 <- Incidence3 + labs(title = "Incidence rate of Fatalities across Occ
 
 
 ```{r Cowplot, fig.height = 12, fig.width= 10, fig.align = "center"}
+# Unify the plot sections together
 
 title_theme <- ggdraw() +
   draw_label("What occupation type experienced the highest and 
