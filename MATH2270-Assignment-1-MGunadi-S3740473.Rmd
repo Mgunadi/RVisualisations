@@ -31,7 +31,6 @@ opts_chunk$set(tidy.opts=list(width.cutoff=60),tidy=TRUE)
 
 ```{r preprocessing_total_fatalities}
 #load table
-
 injuries <- read_excel("traumatic_injuries.xlsx", range = "A5:K57")
 total_fatalities <- injuries[,1:6]
 colnames(total_fatalities) <- c("Occupation", total_fatalities[1, 2:6])
@@ -49,7 +48,6 @@ total_groups <- reshape2::melt(total_groups, id.vars ="Occupation", variable.nam
 
 ```{r preprocessing_incidence_rate}
 #take last 3 years of incidence statistics
-
 incidence <- injuries[,c(1, 9:11)]
 colnames(incidence) <- c("Occupation", "2014", "2015", "2016")
 incidence <- incidence[-1,]
@@ -63,7 +61,7 @@ incidence_groups <- reshape2::melt(incidence, id.vars ="Occupation", variable.na
 ```
 
 ```{r merge_statistics}
-
+#merging incidence and total
 merged_injuries <- cbind(total_groups, incidence = round(incidence_groups[,3], digits = 2))
 merged_injuries$Occupation <- as.factor(merged_injuries$Occupation)
 merged_injuries$Occupation <- factor(merged_injuries$Occupation, labels = c("Clerical", "Community worker", "Labourers", "Machinery Operator", "Managers", "Professionals", "Sales", "Technician/trade"))
@@ -72,22 +70,21 @@ merged_injuries$Occupation <- factor(merged_injuries$Occupation, labels = c("Cle
 ```
 
 
-```{r visualisation1}
+```{r visualisation1, warnings=FALSE}
 #Section 1: fatalities
-
 Fatalities <- ggplot(data = merged_injuries, aes(x = Occupation, y = `Total fatalities`), fill = Year) 
 
 Fatalities2 <- Fatalities + geom_col(position = "dodge2", aes(fill = Year)) + theme(axis.text.x=element_text(angle = 60, vjust = 0.5)) + scale_fill_manual(values = colorRampPalette(brewer.pal(3, "Reds"))(3))
 
 Fatalities3 <- Fatalities2 + scale_y_continuous(breaks=1:7*10)
 
-Fatalities4 <- Fatalities3 + labs(title = "Total Fatalities", x = "Occupation", y = "Total fatalities") + annotate("text", x = 6.7, y = 4, label = "2", size = 3, face = "bold") + annotate("text", x = 4, y = 74, label = "71") + theme(plot.title = element_text(size = 16, face = "bold"), axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"))
+Fatalities4 <- Fatalities3 + labs(title = "Total Fatalities", x = "Occupation", y = "Total fatalities") + annotate("text", x = c(1.0,1.3), y = c(4,4), label = "1", size = 4) + annotate("text", x = 4, y = 74, label = "71") + theme(plot.title = element_text(size = 16, face = "bold"), axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"))
 
 ```
 
 
 
-```{r}
+```{r, warnings=FALSE}
 #Section 2: incidence
 
 Incidence <- ggplot(data = merged_injuries, aes(x = Occupation, y = incidence), fill = Year) 
@@ -96,18 +93,18 @@ Incidence2 <- Incidence + geom_col(position = "dodge2", aes(fill = Year)) + them
 
 Incidence3 <- Incidence2 + scale_y_continuous(breaks=2*1.0:5.0)
 
-Incidence4 <- Incidence3 + labs(title = "Incidence rate of Fatalities", x = "Occupation", y = "Incidence (per 100,000 workers)") + annotate("text", x = c(1.0,1.3), y = c(.75,0.75), label = c(".06", ".06"), size = 3, face = "bold") + annotate("text", x = 4, y = 10, label = "9.53", size = 3.8) + theme(plot.title = element_text(size = 16, face = "bold"), axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"))
+Incidence4 <- Incidence3 + labs(title = "Incidence rate of Fatalities", x = "Occupation", y = "Incidence (per 100,000 workers)") + annotate("text", x = c(1.0,1.3), y = c(.75,0.75), label = c(".06", ".06"), size = 4) + annotate("text", x = 4, y = 10, label = "9.53", size = 3.8) + theme(plot.title = element_text(size = 16, face = "bold"), axis.text = element_text(size = 14), axis.title = element_text(size = 14, face = "bold"))
 
 ```
 
 
-```{r Cowplot, fig.height = 12, fig.width= 10, fig.align = "center"}
+```{r Cowplot, fig.height = 12, fig.width= 10, fig.align = "center", warnings=FALSE}
 # Unify the plot sections together
 
 title_theme <- ggdraw() +
   draw_label("What occupation type experienced the highest and 
              lowest injury-related fatalities in Australia (2014-2016)?",
-             fontface = "bold", size = 16)
+             fontface = "bold", size = 18)
 
 p <- plot_grid(Fatalities4,
           Incidence4,
