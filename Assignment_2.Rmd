@@ -1,0 +1,20 @@
+---
+title: "Assignment_2"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+
+```{r}
+
+```
+
+
+```{r, echo=FALSE}
+
+```
