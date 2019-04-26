@@ -5,16 +5,181 @@ output: pdf_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(Hmisc)
+library(ggthemes)
 ```
+
+
+
+```{r}
+apps <- read.csv("googleplaystore.csv", stringsAsFactors = FALSE)
+
+f <- function(x){
+  length(unique(x))
+}
+sapply(apps, f)
+unique(apps$Category)
+
+as.data.frame(table(apps$Category)) %>% arrange(Freq)
+```
+
+Selected topics:
+
+Medical, game, productivity, business, health, social
+Are you getting bang for your buck
+Targets: installs, ratings (satisfaction), reviews,
+independent variable: price
+
+
+Questions:
+
+Does ratings/ satisfaction vary with price (regression)?
+  Is this mediated by number of reviews?
+Does number of installs vary with price (regression)?
+  Is this also mediated by number of reviews
+
+```{r, echo=FALSE}
+
+select_apps <- apps %>% filter(Category %in% c("GAME", "MEDICAL", "BUSINESS", "PRODUCTIVITY", "LIFESTYLE", "SOCIAL"))
+sapply(select_apps, class)
+select_apps$Category <- as.factor(select_apps$Category)
+select_apps$Reviews <- as.numeric(select_apps$Reviews)
+select_apps$Installs <- factor(select_apps$Installs, levels = c("0+", "1+", "5+", "10+", "50+", "100+", "500+", "1,000+", "5,000+", "10,000+", "50,000+", "100,000+", "500,000+", "1,000,000+", "5,000,000+", "10,000,000+", "50,000,000+", "100,000,000+", "500,000,000+", "1,000,000,000+"), ordered = TRUE)
+levels(select_apps$Installs)
+
+select_apps$Price <- gsub('\\$', "", select_apps$Price)
+select_apps$Price <- as.numeric(select_apps$Price)
+
+```
+
+
+
+```{r}
+colSums(is.na(select_apps))
+
+```
+
+
+```{r}
+library(itertools)
+variables <- colnames(select_apps)
+unlist(as.list(enumerate(variables)))
+screen <- lapply(variables, function(i) ggplot(data = select_apps, aes_string(x=i)) + geom_histogram())
+
+#rating
+screen[[3]]
+
+#reviews
+screen[[4]]
+
+#price
+screen[[8]]
+```
+```{r}
+#filter outliers for reviews
+reviews <- ggplot(select_apps, aes(x = factor(1), y = Reviews))
+reviews <- reviews + geom_boxplot(width = 0.25)
+reviews
+
+box <- ggplot_build(reviews)
+box$data[[1]][1:5]
+
+apps_clean <- filter(select_apps, Reviews <2225104)
+reviews2 <- ggplot(apps_clean, aes(x = factor(1), y = Reviews))
+reviews2 <- reviews2 + geom_boxplot(width = 0.25)
+reviews2
+qplot(Reviews, data = apps_clean, geom = "histogram" )
+#plot is positively skewed
+
+```
+
+```{r}
+price <- ggplot(apps_clean, aes(x = factor(1), y = Price))
+price <- price + geom_boxplot(width = 0.25)
+price
+
+box2 <-ggplot_build(price)
+box2
+box2$data[[1]][1:5]
+
+
+library(outliers)
+z.scores <- apps_clean$Price %>% scores(type = "z")
+z.scores %>% summary()
+
+apps_clean <- filter(select_apps, Price <22)
+
+price2 <- ggplot(apps_clean, aes(x = factor(1), y = Price))
+price2 <- price2 + geom_boxplot(width = 0.25)
+price2
+qplot(Price, data = apps_clean, geom = "histogram" )
+
+```
+
+```{r}
+rate_price <-ggplot(data = apps_clean, aes(x = Price, y = Rating))
+rate_price + geom_point(position = "jitter")
+```
+
+```{r}
+# levels(apps_clean$Installs) <- list(`0-100`= c("0+", "1+", "5+", "10+", "50+"), `101 - 1,000` = c("100+", "500+") , `1,001 - 10,000` = c("1,000+", "5,000+"), `10,001 - 100,000`= c("10,000+", "50,000+"), `100,001 - 1,000,000` = c("100,000+", "500,000+"), `1,000,001 - 10,000,000` = c("1,000,000+", "5,000,000+"), `10,000,001 - 100,000,000`= c("10,000,000", "50,000,000+"), `> 100,000,000` = c("100,000,000+", "500,000,000+", "1,000,000,000+"))  
+
+levels(apps_clean$Installs) <- list(`10^2`= c("0+", "1+", "5+", "10+", "50+"), `10^3` = c("100+", "500+") , `10^4` = c("1,000+", "5,000+"), `10^5`= c("10,000+", "50,000+"), `10^6` = c("100,000+", "500,000+"), `> 10^7` = c("1,000,000+", "5,000,000+", "10,000,000", "50,000,000+", "100,000,000+", "500,000,000+", "1,000,000,000+")) 
+
+
+levels(apps_clean$Installs)
+```
+
+```{r}
+installs_price <- ggplot(data = apps_clean, aes(x = Price, y = Installs, colour = Rating))
+installs_price + geom_point(position = "jitter") + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+```
+
+
+```{r}
+reviews_installs <- ggplot(data = apps_clean, aes(x = Reviews, y = Installs, colour = Rating))
+reviews_installs + geom_point(position = "jitter") + xlim(0, 50) + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+```
+
+```{r}
+#add column with mean rating per group
+apps_clean_gp <- apps_clean %>% group_by(Installs) %>% summarise (Mean_Rating = mean(Rating, na.rm = TRUE))
+apps_clean2 <- merge(apps_clean, apps_clean_gp)
+
+
+installs_price2 <- ggplot(data = apps_clean2, aes(x = Installs, y = Price, colour = Rating))
+v_install_price2 <- installs_price2 + geom_violin(width = 0.75, aes(fill = Mean_Rating)) + ylim(0.99,10)
+v_install_price2 + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+#v_install_price + geom_point(position = "jitter") + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+```
+
+
+
+```{r}
+v_install_price2 + facet_wrap(~ Category)
+```
+
+
+
 
 
 
 
 ```{r}
+diamonds <- diamonds
+diamonds_group <- diamonds %>% group_by(cut) %>% summarise(Mean_Price = mean(price))
+diamonds_group
 
+diamonds2 <- diamonds
+diamonds2 <- merge(diamonds2, diamonds_group)
+
+ggplot(diamonds2, aes(x=cut,y=carat)) + geom_boxplot(aes(fill=Mean_Price)) + scale_fill_gradient2(midpoint = mean(diamonds2$price))
 ```
 
-
-```{r, echo=FALSE}
-
-```
