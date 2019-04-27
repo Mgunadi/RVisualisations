@@ -153,7 +153,7 @@ apps_clean2 <- merge(apps_clean, apps_clean_gp)
 
 
 installs_price2 <- ggplot(data = apps_clean2, aes(x = Installs, y = Price, colour = Rating))
-v_install_price2 <- installs_price2 + geom_violin(width = 0.75, aes(fill = Mean_Rating)) + ylim(0.99,10)
+v_install_price2 <- installs_price2 + geom_dotplot(width = 0.75, aes(fill = Mean_Rating)) + ylim(0.99,10)
 v_install_price2 + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
 
 #v_install_price + geom_point(position = "jitter") + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
