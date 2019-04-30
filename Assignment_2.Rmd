@@ -10,6 +10,7 @@ library(dplyr)
 library(ggplot2)
 library(Hmisc)
 library(ggthemes)
+library(ggbeeswarm)
 ```
 
 
@@ -39,7 +40,7 @@ Questions:
 Does ratings/ satisfaction vary with price (regression)?
   Is this mediated by number of reviews?
 Does number of installs vary with price (regression)?
-  Is this also mediated by number of reviews
+  Is this also mediated by number of ratings/ reviews
 
 ```{r, echo=FALSE}
 
@@ -127,7 +128,7 @@ rate_price + geom_point(position = "jitter")
 ```{r}
 # levels(apps_clean$Installs) <- list(`0-100`= c("0+", "1+", "5+", "10+", "50+"), `101 - 1,000` = c("100+", "500+") , `1,001 - 10,000` = c("1,000+", "5,000+"), `10,001 - 100,000`= c("10,000+", "50,000+"), `100,001 - 1,000,000` = c("100,000+", "500,000+"), `1,000,001 - 10,000,000` = c("1,000,000+", "5,000,000+"), `10,000,001 - 100,000,000`= c("10,000,000", "50,000,000+"), `> 100,000,000` = c("100,000,000+", "500,000,000+", "1,000,000,000+"))  
 
-levels(apps_clean$Installs) <- list(`10^2`= c("0+", "1+", "5+", "10+", "50+"), `10^3` = c("100+", "500+") , `10^4` = c("1,000+", "5,000+"), `10^5`= c("10,000+", "50,000+"), `10^6` = c("100,000+", "500,000+"), `> 10^7` = c("1,000,000+", "5,000,000+", "10,000,000", "50,000,000+", "100,000,000+", "500,000,000+", "1,000,000,000+")) 
+levels(apps_clean$Installs) <- list(`0 - 10^2` = c("0+", "1+", "5+", "10+", "50+"), `10^2 - 10^3` = c("100+", "500+") , `10^3 - 10^4` = c("1,000+", "5,000+"), `10^4 - 10^5`= c("10,000+", "50,000+"), `10^5 - 10^6` = c("100,000+", "500,000+"), `10^6 - 10^7` = c("1,000,000+", "5,000,000+", "10,000,000+"), `> 10^7` = c("50,000,000+", "100,000,000+", "500,000,000+", "1,000,000,000+")) 
 
 
 levels(apps_clean$Installs)
@@ -141,8 +142,18 @@ installs_price + geom_point(position = "jitter") + scale_colour_gradient2_tablea
 
 
 ```{r}
+#all apps (including free)
 reviews_installs <- ggplot(data = apps_clean, aes(x = Reviews, y = Installs, colour = Rating))
 reviews_installs + geom_point(position = "jitter") + xlim(0, 50) + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+#paid apps only
+reviews_installs2 <- ggplot(data = filter(apps_clean, Price > 0), aes(x = Reviews, y = Installs, colour = Rating))
+reviews_installs2 + geom_point(position = "jitter") + xlim(0, 50) + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
+#free apps only
+reviews_installs3 <- ggplot(data = filter(apps_clean, Price == 0), aes(x = Reviews, y = Installs, colour = Rating))
+reviews_installs3 + geom_quasirandom() + xlim(0, 50) + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+
 
 ```
 
@@ -152,24 +163,31 @@ apps_clean_gp <- apps_clean %>% group_by(Installs) %>% summarise (Mean_Rating = 
 apps_clean2 <- merge(apps_clean, apps_clean_gp)
 
 
-installs_price2 <- ggplot(data = apps_clean2, aes(x = Installs, y = Price, colour = Rating))
-v_install_price2 <- installs_price2 + geom_dotplot(width = 0.75, aes(fill = Mean_Rating)) + ylim(0.99,10)
-v_install_price2 + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
 
-#v_install_price + geom_point(position = "jitter") + scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
+installs_price2 <- ggplot(data = apps_clean2, aes(x = Installs, y = Price, col = Rating))
+v_install_price2 <- installs_price2  + ylim(0.99,21) +  geom_violin(scale = "width")
+v_install_price3 <- v_install_price2 + scale_color_gradient2_tableau(palette = "Red-Blue Diverging") + coord_flip() + geom_beeswarm(aes(col = Rating))# + theme_minimal() #geom_quasirandom(aes(x = Installs, y = Price), height = 0.1) 
+v_install_price3
+
+#v_install_price <- installs_price2 + geom_beeswarm() + ylim(0.99,20)
+#v_install_price
+#+ scale_colour_gradient2_tableau(palette = "Red-Blue Diverging") + scale_alpha("Rating")
 
 ```
 
 
 
 ```{r}
-v_install_price2 + facet_wrap(~ Category)
+v_install_price3 + facet_wrap(~ Category)
 ```
 
 
+```{r}
+price_rating <- ggplot(data = apps_clean2, aes(x = Price, y = Rating, size = Reviews))
+price_rating + geom_point(position = "jitter", alpha = 0.25) + xlim(0.99,21) + scale_size(trans = 'log10')
 
 
-
+```
 
 
 ```{r}
