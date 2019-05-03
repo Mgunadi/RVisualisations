@@ -79,14 +79,23 @@ rate_price + geom_point(position = "jitter")
 select_clean <- select_clean %>% filter(Price <100)
 
 #Plot
+theme_set(
+  theme_light() + 
+    theme(legend.position = "right", plot.title = element_text(hjust = 0.5, face = "bold", size = 15),
+          x.title = element_text(face = "bold", size = 12), y.title = element_text(face = "bold", size = 12),
+         strip.background = element_rect(color= "black", fill="#7DDBFA", size=1, linetype="solid"),
+         strip.text = element_text(colour = "black", face = 'bold')))
 rate_price <-ggplot(data = select_clean, aes(x = Price, y = Rating, size = Installs))
 
-rate_price <- rate_price + geom_point(position = "jitter", alpha = 0.25, col = "blue") +
-  xlim(0,50) + ylim(0,5) + scale_size_discrete(breaks = c(1.4, 2,8, 4.2, 5.6, 7, 8.4), guide = "legend")
+rate_price <- rate_price + geom_point(position = "jitter", alpha = 0.25, col = "blue") + 
+  xlim(0,40) + ylim(1,5) + scale_size_ordinal(range = c(2,8), guide = "legend")
+  
+  #scale_size(c(1.4, 2,8, 4.2, 5.6, 7, 8.4), guide = "legend")
 
-rate_price <- rate_price + ggtitle("Google playstore App installations - ratings vs price") +
- xlab("Price ($)") + ylab("Average Rating") + labs(size = "installs") +
-
+rate_price <- rate_price + ggtitle("Google playstore App installations - ratings vs price") + 
+  labs(title = "Google playstore App installations - ratings vs price", x ="Price ($)", y = "Average Rating", size = "installs") 
+    #annotate("text", x = 40, y = 4.3, label = "Norwegian - for Kids and Babies", size = 1.8)
+  
 rate_price
 
 #Facetting
