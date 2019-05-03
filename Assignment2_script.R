@@ -82,10 +82,10 @@ select_clean <- select_clean %>% filter(Price <100)
 rate_price <-ggplot(data = select_clean, aes(x = Price, y = Rating, size = Installs))
 
 rate_price <- rate_price + geom_point(position = "jitter", alpha = 0.25, col = "blue") +
-  xlim(0,50) + ylim(0,5) + scale_size_discrete(breaks = c(1.4, 2,8, 4.2, 5.6, 7, 8.4))
+  xlim(0,50) + ylim(0,5) + scale_size_discrete(breaks = c(1.4, 2,8, 4.2, 5.6, 7, 8.4), guide = "legend")
 
 rate_price <- rate_price + ggtitle("Google playstore App installations - ratings vs price") +
- xlab("Price ($)") + ylab("Average Rating") + labs(size = "installs")
+ xlab("Price ($)") + ylab("Average Rating") + labs(size = "installs") +
 
 rate_price
 
