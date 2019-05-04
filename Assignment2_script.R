@@ -12,7 +12,11 @@ f <- function(x){
 }
 sapply(apps, f)
 unique(apps$Category)
-select_apps <- apps
+
+###### Filter apps with certain categories only
+as.data.frame(table(apps$Category)) %>% arrange(Freq)
+select_apps <- apps %>% filter(Category %in% c("FAMILY", "TOOLS", "MEDICAL", "BUSINESS"))
+
 ##### Convert variables into their proper data types.
 select_apps$Category <- as.factor(select_apps$Category)
 select_apps$Reviews <- as.numeric(select_apps$Reviews)
@@ -21,11 +25,7 @@ levels(select_apps$Installs) <- list(`0 - 10^2` = c("0+", "1+", "5+", "10+", "50
 select_apps$Price <- gsub('\\$', "", select_apps$Price)
 select_apps$Price <- as.numeric(select_apps$Price)
 
-###### Filter apps with certain categories only
-#Price: we only want paid apps.
-select_clean <- select_apps %>% filter(Price > 0)
-as.data.frame(table(select_clean$Category)) %>% arrange(Freq)
-select_apps <- apps %>% filter(Category %in% c("FAMILY", "TOOLS", "MEDICAL", "BUSINESS"))
+
 ########################################### Explore data: look for missing values and skew of data in histograms
 colSums(is.na(select_apps))
 
@@ -48,8 +48,10 @@ qplot(x = Installs, data = select_apps, geom = "bar")
 
 
 ######################################### Treat the dataset.
+#Price: we only want paid apps.
+select_clean <- select_apps %>% filter(Price > 0)
 
-#Price outliers
+#Price: outliers
 price <- ggplot(select_clean, aes(x = factor(1), y = Price))
 price <- price + geom_boxplot(width = 0.25)
 qplot(Price, data = select_clean, geom = "histogram") #Flag price as positively skewed - potential outliers to remove
